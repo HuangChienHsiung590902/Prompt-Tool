@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>程式設計提示詞生成工具</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        #result-section {
+            display: none;
+        }
+
+        .question {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        select,
+        .checkbox-group,
+        textarea,
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+            font-family: inherit;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .checkbox-option,
+        .radio-option {
+            margin-bottom: 10px;
+        }
+
+        .checkbox-option input,
+        .radio-option input {
+            margin-right: 10px;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        #result-content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            white-space: pre-line;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #3498db;
+            border-radius: 5px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 20px;
+            color: #7f8c8d;
+        }
+
+        .tip-box {
+            background-color: #e8f4fc;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+
+        .tip-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #2980b9;
+        }
+
+        .copy-button {
+            background-color: #2ecc71;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .copy-button:hover {
+            background-color: #27ae60;
+        }
+
+        .error {
+            border: 2px solid #e74c3c !important;
+        }
+
+        .error-message {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        /* 新增樣式 */
+        .header-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background-color: #2980b9;
+        }
+
+        .edit-mode-notice {
+            background-color: #fef9e7;
+            border-left: 4px solid #f39c12;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>程式設計提示詞生成工具</h1>
+
+        <!-- 新增導航連結 -->
+        <div class="header-actions">
+            <a href="history.html" class="btn">查看歷史記錄</a>
+        </div>
+
+        <!-- 新增編輯模式提示 -->
+        <div class="edit-mode-notice" id="edit-mode-notice">
+            您正在編輯現有的提示詞，儲存後將會更新該記錄。
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress" id="progress-bar" style="width: 20%"></div>
+        </div>
+        <div class="progress-text" id="progress-text">第 1 部分 / 共 5 部分</div>
+
+        <!-- 第一部分：程式設計基本資訊 -->
+        <div class="section active" id="section-1">
+            <h2>第一部分：程式設計基本資訊</h2>
+
+            <div class="tip-box">
+                <div class="tip-title">提示</div>
+                <div class="tip-content">明確定義你的程式設計需求，有助於生成更精準的提示詞。</div>
+            </div>
+
+            <!-- 程式名稱
+            <div class="question">
+                <label for="program-name">程式名稱：</label>
+                <input type="text" id="program-name" name="program-name" placeholder="請輸入程式名稱">
+            </div> -->
+            
+            <div class="question">
+                <label for="programming-language">選擇程式語言：</label>
+                <select id="programming-language" name="programming-language">
+                    <option value="">請選擇...</option>
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="typescript">TypeScript</option>
+                    <option value="cpp">C++</option>
+                    <option value="php">PHP</option>
+                    <option value="go">Go</option>
+                    <option value="other">其他</option>
+                </select>
+                <input type="text" id="other-language" name="other-language" placeholder="請輸入其他程式語言"
+                    style="display: none; margin-top: 10px;">
+            </div>
+
+            <div class="question">
+                <label for="project-type">專案類型：</label>
+                <select id="project-type" name="project-type">
+                    <option value="">請選擇...</option>
+                    <option value="web-frontend">網頁前端</option>
+                    <option value="web-backend">網頁後端</option>
+                    <option value="fullstack">全棧應用</option>
+                    <option value="mobile-app">移動應用</option>
+                    <option value="desktop-app">桌面應用</option>
+                    <option value="api">API服務</option>
+                    <option value="data-analysis">數據分析</option>
+                    <option value="machine-learning">機器學習</option>
+                    <option value="iot">物聯網</option>
+                    <option value="other">其他</option>
+                </select>
+                <input type="text" id="other-project-type" name="other-project-type" placeholder="請輸入其他專案類型"
+                    style="display: none; margin-top: 10px;">
+            </div>
+
+            <div class="question">
+                <label for="architecture">程式架構：</label>
+                <select id="architecture" name="architecture">
+                    <option value="">請選擇...</option>
+                    <option value="mvc">MVC</option>
+                    <option value="mvvm">MVVM</option>
+                    <option value="microservices">微服務</option>
+                    <option value="serverless">無伺服器</option>
+                    <option value="monolithic">單一架構</option>
+                    <option value="layered">分層架構</option>
+                    <option value="event-driven">事件驅動</option>
+                    <option value="dont-know">不確定/不適用</option>
+                    <option value="other">其他</option>
+                </select>
+                <input type="text" id="other-architecture" name="other-architecture" placeholder="請輸入其他架構"
+                    style="display: none; margin-top: 10px;">
+            </div>
+
+            <div class="question">
+                <label for="functionality">目標功能描述：</label>
+                <textarea id="functionality" name="functionality"
+                    placeholder="請描述你想實現的功能，例如：一個可以讀取CSV文件、分析數據並生成圖表的網頁應用..."></textarea>
+            </div>
+
+            <div class="navigation">
+                <div></div>
+                <button onclick="showSection(2)">下一步</button>
+            </div>
+        </div>
+
+        <!-- 第二部分：技術規格與限制 -->
+        <div class="section" id="section-2">
+            <h2>第二部分：技術規格與限制</h2>
+
+            <div class="tip-box">
+                <div class="tip-title">提示</div>
+                <div class="tip-content">指定技術規格和限制有助於生成符合你實際需求的程式碼。</div>
+            </div>
+
+            <div class="question">
+                <label for="dependencies">相依套件與框架：</label>
+                <textarea id="dependencies" name="dependencies"
+                    placeholder="列出你想使用的套件、框架或函式庫，例如：React、Django、NumPy..."></textarea>
+            </div>
+
+            <div class="question">
+                <label for="compatibility">相容性需求：</label>
+                <textarea id="compatibility" name="compatibility"
+                    placeholder="指定你的程式需要支援的瀏覽器、作業系統或其他環境，例如：需支援IE11、需在Windows 7上運行..."></textarea>
+            </div>
+
+            <div class="question">
+                <label for="performance">效能需求：</label>
+                <textarea id="performance" name="performance"
+                    placeholder="描述你對程式效能的要求，例如：頁面載入時間不超過2秒、需要處理10萬筆數據..."></textarea>
+            </div>
+
+            <div class="question">
+                <label for="security">安全需求：</label>
+                <textarea id="security" name="security"
+                    placeholder="說明你對程式安全性的要求，例如：需要防止SQL注入、需要實現OAuth2認證..."></textarea>
+            </div>
+
+            <div class="navigation">
+                <button onclick="showSection(1)">上一步</button>
+                <button onclick="showSection(3)">下一步</button>
+            </div>
+        </div>
+
+        <!-- 第三部分：開發環境與工具 -->
+        <div class="section" id="section-3">
+            <h2>第三部分：開發環境與工具</h2>
+
+            <div class="tip-box">
+                <div class="tip-title">提示</div>
+                <div class="tip-content">明確你的開發環境和工具有助於產生更適合你的工作流程的程式碼。</div>
+            </div>
+
+            <div class="question">
+                <label for="ide">IDE偏好：</label>
+                <select id="ide" name="ide">
+                    <option value="">請選擇...</option>
+                    <option value="vscode">Visual Studio Code</option>
+                    <option value="pycharm">PyCharm</option>
+                    <option value="intellij">IntelliJ IDEA</option>
+                    <option value="webstorm">WebStorm</option>
+                    <option value="sublime">Sublime Text</option>
+                    <option value="atom">Atom</option>
+                    <option value="eclipse">Eclipse</option>
+                    <option value="visual-studio">Visual Studio</option>
+                    <option value="xcode">Xcode</option>
+                    <option value="android-studio">Android Studio</option>
+                    <option value="other">其他</option>
+                </select>
+                <input type="text" id="other-ide" name="other-ide" placeholder="請輸入其他IDE"
+                    style="display: none; margin-top: 10px;">
+            </div>
+
+            <div class="question">
+                <label for="version-control">版本控制系統：</label>
+                <select id="version-control" name="version-control">
+                    <option value="">請選擇...</option>
+                    <option value="git">Git</option>
+                    <option value="svn">SVN</option>
+                    <option value="mercurial">Mercurial</option>
+                    <option value="none">不使用</option>
+                    <option value="other">其他</option>
+                </select>
+                <input type="text" id="other-version-control" name="other-version-control" placeholder="請輸入其他版本控制系統"
+                    style="display: none; margin-top: 10px;">
+            </div>
+
+            <div class="question">
+                <label for="testing-framework">測試框架：</label>
+                <select id="testing-framework" name="testing-framework">
+                    <option value="">請選擇...</option>
+                    <option value="jest">Jest</option>
+                    <option value="mocha">Mocha</option>
+                    <option value="jasmine">Jasmine</option>
+                    <option value="pytest">pytest</option>
+                    <option value="unittest">unittest</option>
+                    <option value="junit">JUnit</option>
+                    <option value="nunit">NUnit</option>
+                    <option value="none">不使用</option>
+                    <option value="other">其他</option>
+                </select>
+                <input type="text" id="other-testing-framework" name="other-testing-framework" placeholder="請輸入其他測試框架"
+                    style="display: none; margin-top: 10px;">
+            </div>
+
+            <div class="question">
+                <label for="deployment">部署環境：</label>
+                <select id="deployment" name="deployment">
+                    <option value="">請選擇...</option>
+                    <option value="docker">Docker</option>
+                    <option value="aws">AWS</option>
+                    <option value="azure">Azure</option>
+                    <option value="google-cloud">Google Cloud</option>
+                    <option value="heroku">Heroku</option>
+                    <option value="netlify">Netlify</option>
+                    <option value="vercel">Vercel</option>
+                    <option value="local">本地/內部伺服器</option>
+                    <option value="undecided">尚未決定</option>
+                    <option value="other">其他</option>
+                </select>
+                <input type="text" id="other-deployment" name="other-deployment" placeholder="請輸入其他部署環境"
+                    style="display: none; margin-top: 10px;">
+            </div>
+
+            <div class="navigation">
+                <button onclick="showSection(2)">上一步</button>
+                <button onclick="showSection(4)">下一步</button>
+            </div>
+        </div>
+
+        <!-- 第四部分：編碼標準與風格 -->
+        <div class="section" id="section-4">
+            <h2>第四部分：編碼標準與風格</h2>
+
+            <div class="tip-box">
+                <div class="tip-title">提示</div>
+                <div class="tip-content">指定編碼標準和風格有助於生成符合你團隊或個人偏好的程式碼。</div>
+            </div>
+
+            <div class="question">
+                <label for="naming-convention">命名慣例：</label>
+                <select id="naming-convention" name="naming-convention">
+                    <option value="">請選擇...</option>
+                    <option value="camelCase">駝峰式 (camelCase)</option>
+                    <option value="snake_case">蛇式 (snake_case)</option>
+                    <option value="PascalCase">帕斯卡 (PascalCase)</option>
+                    <option value="kebab-case">烤肉串式 (kebab-case)</option>
+                    <option value="language-standard">遵循語言標準</option>
+                    <option value="other">其他</option>
+                </select>
+                <input type="text" id="other-naming-convention" name="other-naming-convention" placeholder="請輸入其他命名慣例"
+                    style="display: none; margin-top: 10px;">
+            </div>
+
+            <div class="question">
+                <label for="code-formatting">程式碼格式偏好：</label>
+                <textarea id="code-formatting" name="code-formatting"
+                    placeholder="描述你的程式碼格式偏好，例如：縮排使用4個空格、每行不超過80個字元..."></textarea>
+            </div>
+
+            <div class="question">
+                <label for="comment-style">註解風格：</label>
+                <select id="comment-style" name="comment-style">
+                    <option value="">請選擇...</option>
+                    <option value="javadoc">JavaDoc 風格</option>
+                    <option value="docstring">Python Docstring</option>
+                    <option value="jsdoc">JSDoc</option>
+                    <option value="minimal">最小註解</option>
+                    <option value="extensive">詳盡註解</option>
+                    <option value="other">其他</option>
+                </select>
+                <input type="text" id="other-comment-style" name="other-comment-style" placeholder="請輸入其他註解風格"
+                    style="display: none; margin-top: 10px;">
+            </div>
+
+            <div class="question">
+                <label for="error-handling">錯誤處理策略：</label>
+                <select id="error-handling" name="error-handling">
+                    <option value="">請選擇...</option>
+                    <option value="try-catch">Try-Catch 捕獲</option>
+                    <option value="return-codes">返回狀態碼</option>
+                    <option value="exceptions">拋出異常</option>
+                    <option value="callback">錯誤回調</option>
+                    <option value="mixed">混合策略</option>
+                    <option value="other">其他</option>
+                </select>
+                <input type="text" id="other-error-handling" name="other-error-handling" placeholder="請輸入其他錯誤處理策略"
+                    style="display: none; margin-top: 10px;">
+            </div>
+
+            <div class="navigation">
+                <button onclick="showSection(3)">上一步</button>
+                <button onclick="showSection(5)">下一步</button>
+            </div>
+        </div>
+
+        <!-- 第五部分：特殊需求與優化 -->
+        <div class="section" id="section-5">
+            <h2>第五部分：特殊需求與優化</h2>
+
+            <div class="tip-box">
+                <div class="tip-title">提示</div>
+                <div class="tip-content">特殊需求與優化有助於生成更符合你特定場景的程式碼。</div>
+            </div>
+
+            <div class="question">
+                <label for="optimization">程式碼最佳化需求：</label>
+                <textarea id="optimization" name="optimization"
+                    placeholder="描述你對程式碼最佳化的需求，例如：需要最佳化記憶體使用、需要提高演算法效率..."></textarea>
+            </div>
+
+            <div class="question">
+                <label for="scalability">可擴展性考量：</label>
+                <textarea id="scalability" name="scalability"
+                    placeholder="描述你對可擴展性的考量，例如：需要支援水平擴展、需要能輕鬆添加新功能..."></textarea>
+            </div>
+
+            <div class="question">
+                <label for="algorithms">特殊演算法需求：</label>
+                <textarea id="algorithms" name="algorithms"
+                    placeholder="指定你需要使用的特殊演算法，例如：需要實現A*尋路演算法、需要使用機器學習分類演算法..."></textarea>
+            </div>
+
+            <div class="question">
+                <label for="extra-requirements">其他特定領域需求：</label>
+                <textarea id="extra-requirements" name="extra-requirements"
+                    placeholder="描述其他任何特定領域的需求，例如：需要符合GDPR、需要支援特定硬體..."></textarea>
+            </div>
+
+            <div class="navigation">
+                <button onclick="showSection(4)">上一步</button>
+                <button onclick="document.querySelectorAll('.section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById('result-section').style.display = 'block';
+                document.getElementById('progress-bar').style.width = '100%';
+                document.getElementById('progress-text').textContent = '已完成';
+                
+                // 生成提示詞
+                const prompt = generatePrompt();
+                document.getElementById('result-content').textContent = prompt;">生成提示詞</button>
+            </div>
+        </div>
+
+        <!-- 結果頁面 -->
+        <div id="result-section">
+            <h2>你的程式設計提示詞</h2>
+            <div class="tip-box">
+                <div class="tip-title">使用提示</div>
+                <div class="tip-content">以下是根據你的需求生成的提示詞。你可以直接複製使用，或根據實際需要進行調整。</div>
+            </div>
+            <div id="result-content"></div>
+            <button onclick="const promptText = document.getElementById('result-content').textContent;
+            navigator.clipboard.writeText(promptText)
+                .then(() => {
+                    this.textContent = '已複製！';
+                    setTimeout(() => {
+                        this.textContent = '複製提示詞';
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('無法複製文字: ', err);
+                    alert('複製失敗，請手動選擇文字並複製。');
+                });" class="copy-button">複製提示詞</button>
+            <button id="save-button" onclick="// 收集所有表單資料
+                const formData = {
+                    // 第一部分
+                    programmingLanguage: document.getElementById('programming-language').value,
+                    otherLanguage: document.getElementById('other-language').value,
+                    projectType: document.getElementById('project-type').value,
+                    otherProjectType: document.getElementById('other-project-type').value,
+                    architecture: document.getElementById('architecture').value,
+                    otherArchitecture: document.getElementById('other-architecture').value,
+                    functionality: document.getElementById('functionality').value,
+                    
+                    // 第二部分
+                    dependencies: document.getElementById('dependencies').value,
+                    compatibility: document.getElementById('compatibility').value,
+                    performance: document.getElementById('performance').value,
+                    security: document.getElementById('security').value,
+                    
+                    // 第三部分
+                    ide: document.getElementById('ide').value,
+                    otherIde: document.getElementById('other-ide').value,
+                    versionControl: document.getElementById('version-control').value,
+                    otherVersionControl: document.getElementById('other-version-control').value,
+                    testingFramework: document.getElementById('testing-framework').value,
+                    otherTestingFramework: document.getElementById('other-testing-framework').value,
+                    deployment: document.getElementById('deployment').value,
+                    otherDeployment: document.getElementById('other-deployment').value,
+                    
+                    // 第四部分
+                    namingConvention: document.getElementById('naming-convention').value,
+                    otherNamingConvention: document.getElementById('other-naming-convention').value,
+                    codeFormatting: document.getElementById('code-formatting').value,
+                    commentStyle: document.getElementById('comment-style').value,
+                    otherCommentStyle: document.getElementById('other-comment-style').value,
+                    errorHandling: document.getElementById('error-handling').value,
+                    otherErrorHandling: document.getElementById('other-error-handling').value,
+                    
+                    // 第五部分
+                    optimization: document.getElementById('optimization').value,
+                    scalability: document.getElementById('scalability').value,
+                    algorithms: document.getElementById('algorithms').value,
+                    extraRequirements: document.getElementById('extra-requirements').value,
+                    
+                    // 生成的提示詞
+                    generatedPrompt: document.getElementById('result-content').textContent,
+                    
+                    // 時間戳記
+                    timestamp: new Date().toISOString()
+                };
+                
+                // 檢查是否是編輯模式
+                if (editMode && editId) {
+                    formData.id = editId;
+                    updatePrompt(formData);
+                } else {
+                    saveToDatabase(formData);
+                }" class="save-button">儲存到資料庫</button>
+            <button onclick="resetForm()">重新開始</button>
+        </div>
+    </div>
+
+    <script>
+        // 重置表單函數
+        function resetForm() {
+            // 重置所有選擇器
+            document.querySelectorAll('select').forEach(select => {
+                select.selectedIndex = 0;
+            });
+
+            // 重置所有文本區域
+            document.querySelectorAll('textarea').forEach(textarea => {
+                textarea.value = '';
+            });
+
+            // 重置並隱藏所有文本輸入框
+            document.querySelectorAll('input[type="text"]').forEach(input => {
+                input.value = '';
+                input.style.display = 'none';
+            });
+
+            // 隱藏結果區域並返回第一部分
+            document.getElementById('result-section').style.display = 'none';
+            showSection(1);
+        }
+
+        // 初始化
+        let currentSection = 1;
+        const totalSections = 5;
+        let editMode = false;
+        let editId = null;
+
+        // 更新進度條
+        function updateProgressBar() {
+            const progressPercent = (currentSection / totalSections) * 100;
+            document.getElementById('progress-bar').style.width = progressPercent + '%';
+            document.getElementById('progress-text').textContent = `第 ${currentSection} 部分 / 共 ${totalSections} 部分`;
+        }
+
+        // 顯示指定部分
+        function showSection(sectionNumber) {
+            // 隱藏所有部分
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // 顯示目標部分
+            document.getElementById(`section-${sectionNumber}`).classList.add('active');
+
+            // 更新進度
+            currentSection = sectionNumber;
+            updateProgressBar();
+        }
+
+        // 生成提示詞
+        function generatePrompt() {
+            // 獲取表單數據 - 第一部分
+            const programmingLanguage = document.getElementById('programming-language');
+            let programmingLanguageText = programmingLanguage.options[programmingLanguage.selectedIndex]?.text || '';
+            if (programmingLanguageText === '其他') {
+                programmingLanguageText = document.getElementById('other-language').value;
+            }
+
+            const projectType = document.getElementById('project-type');
+            let projectTypeText = projectType.options[projectType.selectedIndex]?.text || '';
+            if (projectTypeText === '其他') {
+                projectTypeText = document.getElementById('other-project-type').value;
+            }
+
+            const architecture = document.getElementById('architecture');
+            let architectureText = architecture.options[architecture.selectedIndex]?.text || '';
+            if (architectureText === '其他') {
+                architectureText = document.getElementById('other-architecture').value;
+            }
+
+            const functionality = document.getElementById('functionality').value;
+
+            // 第二部分
+            const dependencies = document.getElementById('dependencies').value;
+            const compatibility = document.getElementById('compatibility').value;
+            const performance = document.getElementById('performance').value;
+            const security = document.getElementById('security').value;
+
+            // 第三部分
+            const ide = document.getElementById('ide');
+            let ideText = ide.options[ide.selectedIndex]?.text || '';
+            if (ideText === '其他') {
+                ideText = document.getElementById('other-ide').value;
+            }
+
+            const versionControl = document.getElementById('version-control');
+            let versionControlText = versionControl.options[versionControl.selectedIndex]?.text || '';
+            if (versionControlText === '其他') {
+                versionControlText = document.getElementById('other-version-control').value;
+            }
+
+            const testingFramework = document.getElementById('testing-framework');
+            let testingFrameworkText = testingFramework.options[testingFramework.selectedIndex]?.text || '';
+            if (testingFrameworkText === '其他') {
+                testingFrameworkText = document.getElementById('other-testing-framework').value;
+            }
+
+            const deployment = document.getElementById('deployment');
+            let deploymentText = deployment.options[deployment.selectedIndex]?.text || '';
+            if (deploymentText === '其他') {
+                deploymentText = document.getElementById('other-deployment').value;
+            }
+
+            // 第四部分
+            const namingConvention = document.getElementById('naming-convention');
+            let namingConventionText = namingConvention.options[namingConvention.selectedIndex]?.text || '';
+            if (namingConventionText === '其他') {
+                namingConventionText = document.getElementById('other-naming-convention').value;
+            }
+
+            const codeFormatting = document.getElementById('code-formatting').value;
+
+            const commentStyle = document.getElementById('comment-style');
+            let commentStyleText = commentStyle.options[commentStyle.selectedIndex]?.text || '';
+            if (commentStyleText === '其他') {
+                commentStyleText = document.getElementById('other-comment-style').value;
+            }
+
+            const errorHandling = document.getElementById('error-handling');
+            let errorHandlingText = errorHandling.options[errorHandling.selectedIndex]?.text || '';
+            if (errorHandlingText === '其他') {
+                errorHandlingText = document.getElementById('other-error-handling').value;
+            }
+
+            // 第五部分
+            const optimization = document.getElementById('optimization').value;
+            const scalability = document.getElementById('scalability').value;
+            const algorithms = document.getElementById('algorithms').value;
+            const extraRequirements = document.getElementById('extra-requirements').value;
+
+            // 生成提示詞
+            let prompt = '';
+
+            // 添加任務描述
+            prompt += `我需要你協助我開發一個程式。請基於以下要求提供程式碼和說明：\n\n`;
+
+            // 添加基本信息
+            prompt += `【基本資訊】\n`;
+            if (programmingLanguageText) prompt += `程式語言：${programmingLanguageText}\n`;
+            if (projectTypeText) prompt += `專案類型：${projectTypeText}\n`;
+            if (architectureText && architectureText !== '不確定/不適用') prompt += `程式架構：${architectureText}\n`;
+            if (functionality) prompt += `功能描述：${functionality}\n\n`;
+
+            // 添加技術規格與限制
+            let hasTechSpecs = dependencies || compatibility || performance || security;
+            if (hasTechSpecs) {
+                prompt += `【技術規格與限制】\n`;
+                if (dependencies) prompt += `相依套件與框架：${dependencies}\n`;
+                if (compatibility) prompt += `相容性需求：${compatibility}\n`;
+                if (performance) prompt += `效能需求：${performance}\n`;
+                if (security) prompt += `安全需求：${security}\n\n`;
+            }
+
+            // 添加開發環境
+            let hasDevEnv = (ideText && ideText !== '請選擇...') || (versionControlText && versionControlText !== '請選擇...') || (testingFrameworkText && testingFrameworkText !== '請選擇...') || (deploymentText && deploymentText !== '請選擇...');
+            if (hasDevEnv) {
+                prompt += `【開發環境與工具】\n`;
+                if (ideText && ideText !== '請選擇...') prompt += `IDE：${ideText}\n`;
+                if (versionControlText && versionControlText !== '請選擇...' && versionControlText !== '不使用') prompt += `版本控制：${versionControlText}\n`;
+                if (testingFrameworkText && testingFrameworkText !== '請選擇...' && testingFrameworkText !== '不使用') prompt += `測試框架：${testingFrameworkText}\n`;
+                if (deploymentText && deploymentText !== '請選擇...' && deploymentText !== '尚未決定') prompt += `部署環境：${deploymentText}\n\n`;
+            }
+
+            // 添加編碼標準
+            let hasCodeStandards = (namingConventionText && namingConventionText !== '請選擇...') || codeFormatting || (commentStyleText && commentStyleText !== '請選擇...') || (errorHandlingText && errorHandlingText !== '請選擇...');
+            if (hasCodeStandards) {
+                prompt += `【編碼標準與風格】\n`;
+                if (namingConventionText && namingConventionText !== '請選擇...') prompt += `命名慣例：${namingConventionText}\n`;
+                if (codeFormatting) prompt += `程式碼格式：${codeFormatting}\n`;
+                if (commentStyleText && commentStyleText !== '請選擇...') prompt += `註解風格：${commentStyleText}\n`;
+                if (errorHandlingText && errorHandlingText !== '請選擇...') prompt += `錯誤處理：${errorHandlingText}\n\n`;
+            }
+
+            // 添加特殊需求
+            let hasSpecialRequirements = optimization || scalability || algorithms || extraRequirements;
+            if (hasSpecialRequirements) {
+                prompt += `【特殊需求與優化】\n`;
+                if (optimization) prompt += `程式碼最佳化：${optimization}\n`;
+                if (scalability) prompt += `可擴展性：${scalability}\n`;
+                if (algorithms) prompt += `特殊演算法：${algorithms}\n`;
+                if (extraRequirements) prompt += `其他需求：${extraRequirements}\n\n`;
+            }
+
+            // 添加結尾
+            prompt += `請提供以下內容：\n1. 主要程式碼實現\n2. 程式架構說明\n3. 使用指南\n4. 可能的擴展方向\n\n希望程式碼清晰易懂，附帶適當的註解。謝謝！`;
+
+            return prompt;
+        }
+
+        // 儲存到資料庫
+        function saveToDatabase(promptData) {
+            // 使用fetch API將資料發送到後端
+            fetch('/save-prompt', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(promptData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('提示詞已成功儲存到資料庫！');
+                    } else {
+                        alert('儲存失敗：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('儲存過程中出錯：', error);
+                    alert('儲存過程中出錯：' + error.message);
+                });
+        }
+
+        // 更新提示詞
+        function updatePrompt(promptData) {
+            // 使用 fetch API 發送更新請求
+            fetch(`/prompts/${promptData.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(promptData)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('提示詞已成功更新！');
+                    } else {
+                        alert('更新失敗：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('更新過程中出錯：', error);
+                    alert('更新過程中出錯：' + error.message);
+                });
+        }
+
+        // 初始化事件監聽器
+        document.addEventListener('DOMContentLoaded', function () {
+            // 檢查是否是編輯模式
+            const urlParams = new URLSearchParams(window.location.search);
+            const promptId = urlParams.get('id');
+
+            if (promptId) {
+                editMode = true;
+                editId = promptId;
+                document.getElementById('edit-mode-notice').style.display = 'block';
+
+                // 載入提示詞資料
+                fetch(`/prompts/${promptId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.data) {
+                            const prompt = data.data;
+
+                            // 填充表單數據
+                            // 第一部分
+                            setSelectValue('programming-language', prompt.programming_language);
+                            if (prompt.programming_language === 'other') {
+                                document.getElementById('other-language').value = prompt.other_language;
+                                document.getElementById('other-language').style.display = 'block';
+                            }
+
+                            setSelectValue('project-type', prompt.project_type);
+                            if (prompt.project_type === 'other') {
+                                document.getElementById('other-project-type').value = prompt.other_project_type;
+                                document.getElementById('other-project-type').style.display = 'block';
+                            }
+
+                            setSelectValue('architecture', prompt.architecture);
+                            if (prompt.architecture === 'other') {
+                                document.getElementById('other-architecture').value = prompt.other_architecture;
+                                document.getElementById('other-architecture').style.display = 'block';
+                            }
+
+                            document.getElementById('functionality').value = prompt.functionality;
+
+                            // 第二部分
+                            document.getElementById('dependencies').value = prompt.dependencies;
+                            document.getElementById('compatibility').value = prompt.compatibility;
+                            document.getElementById('performance').value = prompt.performance;
+                            document.getElementById('security').value = prompt.security;
+
+                            // 第三部分
+                            setSelectValue('ide', prompt.ide);
+                            if (prompt.ide === 'other') {
+                                document.getElementById('other-ide').value = prompt.other_ide;
+                                document.getElementById('other-ide').style.display = 'block';
+                            }
+
+                            setSelectValue('version-control', prompt.version_control);
+                            if (prompt.version_control === 'other') {
+                                document.getElementById('other-version-control').value = prompt.other_version_control;
+                                document.getElementById('other-version-control').style.display = 'block';
+                            }
+
+                            setSelectValue('testing-framework', prompt.testing_framework);
+                            if (prompt.testing_framework === 'other') {
+                                document.getElementById('other-testing-framework').value = prompt.other_testing_framework;
+                                document.getElementById('other-testing-framework').style.display = 'block';
+                            }
+
+                            setSelectValue('deployment', prompt.deployment);
+                            if (prompt.deployment === 'other') {
+                                document.getElementById('other-deployment').value = prompt.other_deployment;
+                                document.getElementById('other-deployment').style.display = 'block';
+                            }
+
+                            // 第四部分
+                            setSelectValue('naming-convention', prompt.naming_convention);
+                            if (prompt.naming_convention === 'other') {
+                                document.getElementById('other-naming-convention').value = prompt.other_naming_convention;
+                                document.getElementById('other-naming-convention').style.display = 'block';
+                            }
+
+                            document.getElementById('code-formatting').value = prompt.code_formatting;
+
+                            setSelectValue('comment-style', prompt.comment_style);
+                            if (prompt.comment_style === 'other') {
+                                document.getElementById('other-comment-style').value = prompt.other_comment_style;
+                                document.getElementById('other-comment-style').style.display = 'block';
+                            }
+
+                            setSelectValue('error-handling', prompt.error_handling);
+                            if (prompt.error_handling === 'other') {
+                                document.getElementById('other-error-handling').value = prompt.other_error_handling;
+                                document.getElementById('other-error-handling').style.display = 'block';
+                            }
+
+                            // 第五部分
+                            document.getElementById('optimization').value = prompt.optimization;
+                            document.getElementById('scalability').value = prompt.scalability;
+                            document.getElementById('algorithms').value = prompt.algorithms;
+                            document.getElementById('extra-requirements').value = prompt.extra_requirements;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('獲取提示詞詳情時出錯：', error);
+                        alert('獲取提示詞詳情時出錯：' + error.message);
+                    });
+            }
+
+            // 輔助函數：設置選擇器值
+            function setSelectValue(selectId, value) {
+                const select = document.getElementById(selectId);
+                if (select && value) {
+                    for (let i = 0; i < select.options.length; i++) {
+                        if (select.options[i].value === value) {
+                            select.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // 處理"其他"選項的顯示/隱藏
+            const handleOtherOption = function (selectId, otherId) {
+                const select = document.getElementById(selectId);
+                const otherInput = document.getElementById(otherId);
+
+                select.addEventListener('change', function () {
+                    if (this.value === 'other') {
+                        otherInput.style.display = 'block';
+                    } else {
+                        otherInput.style.display = 'none';
+                    }
+                });
+            };
+
+            // 為所有帶有"其他"選項的下拉框添加處理
+            handleOtherOption('programming-language', 'other-language');
+            handleOtherOption('project-type', 'other-project-type');
+            handleOtherOption('architecture', 'other-architecture');
+            handleOtherOption('ide', 'other-ide');
+            handleOtherOption('version-control', 'other-version-control');
+            handleOtherOption('testing-framework', 'other-testing-framework');
+            handleOtherOption('deployment', 'other-deployment');
+            handleOtherOption('naming-convention', 'other-naming-convention');
+            handleOtherOption('comment-style', 'other-comment-style');
+            handleOtherOption('error-handling', 'other-error-handling');
+        });
+    </script>
+</body>
+
+</html>

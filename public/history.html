@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>程式設計提示詞歷史記錄</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .prompt-list {
+            list-style: none;
+            padding: 0;
+        }
+        .prompt-item {
+            border-bottom: 1px solid #eee;
+            padding: 15px 0;
+        }
+        .prompt-item:last-child {
+            border-bottom: none;
+        }
+        .prompt-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+        .prompt-meta {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        .prompt-description {
+            margin-bottom: 10px;
+        }
+        .prompt-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn-view {
+            background-color: #2ecc71;
+        }
+        .btn-view:hover {
+            background-color: #27ae60;
+        }
+        .btn-delete {
+            background-color: #e74c3c;
+        }
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .no-prompts {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>程式設計提示詞歷史記錄</h1>
+        
+        <div class="header-actions">
+            <a href="index.html" class="btn">返回首頁</a>
+        </div>
+        
+        <div id="prompt-container">
+            <ul class="prompt-list" id="prompt-list">
+                <!-- 提示詞項目將通過JavaScript動態添加 -->
+            </ul>
+            <div class="no-prompts" id="no-prompts" style="display: none;">
+                尚未有已儲存的提示詞。<a href="index.html">建立新提示詞</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 獲取所有提示詞
+            fetch('/prompts')
+                .then(response => response.json())
+                .then(data => {
+                    const promptList = document.getElementById('prompt-list');
+                    const noPrompts = document.getElementById('no-prompts');
+                    
+                    if (data.data && data.data.length > 0) {
+                        promptList.innerHTML = '';
+                        
+                        data.data.forEach(prompt => {
+                            const listItem = document.createElement('li');
+                            listItem.className = 'prompt-item';
+                            
+                            // 根據這個項目中的編程語言和專案類型創建標題
+                            let title = '';
+                            if (prompt.programming_language) {
+                                title += prompt.programming_language;
+                                if (prompt.project_type) {
+                                    title += ` - ${prompt.project_type}`;
+                                }
+                            } else {
+                                title = '未指定語言和專案類型';
+                            }
+                            
+                            const date = new Date(prompt.timestamp);
+                            const formattedDate = `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                            
+                            listItem.innerHTML = `
+                                <div class="prompt-title">${title}</div>
+                                <div class="prompt-meta">建立時間：${formattedDate}</div>
+                                <div class="prompt-description">${prompt.functionality ? prompt.functionality.substring(0, 150) + (prompt.functionality.length > 150 ? '...' : '') : '無功能描述'}</div>
+                                <div class="prompt-actions">
+                                    <a href="view-prompt.html?id=${prompt.id}" class="btn btn-view">查看</a>
+                                    <button class="btn btn-delete" data-id="${prompt.id}">刪除</button>
+                                </div>
+                            `;
+                            
+                            promptList.appendChild(listItem);
+                        });
+                        
+                        // 添加刪除功能
+                        document.querySelectorAll('.btn-delete').forEach(button => {
+                            button.addEventListener('click', function() {
+                                if (confirm('確定要刪除這個提示詞嗎？此操作無法撤銷。')) {
+                                    const id = this.getAttribute('data-id');
+                                    
+                                    fetch(`/prompts/${id}`, {
+                                        method: 'DELETE'
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            // 從DOM中移除項目
+                                            this.closest('.prompt-item').remove();
+                                            
+                                            // 如果沒有項目了，顯示無項目消息
+                                            if (promptList.children.length === 0) {
+                                                noPrompts.style.display = 'block';
+                                            }
+                                        } else {
+                                            alert('刪除失敗：' + data.message);
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('刪除時出錯：', error);
+                                        alert('刪除時出錯：' + error.message);
+                                    });
+                                }
+                            });
+                        });
+                    } else {
+                        promptList.style.display = 'none';
+                        noPrompts.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('獲取提示詞時出錯：', error);
+                    alert('獲取提示詞時出錯：' + error.message);
+                });
+        });
+    </script>
+</body>
+</html>

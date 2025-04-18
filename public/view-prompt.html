@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>查看提示詞詳情</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .section:last-child {
+            border-bottom: none;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        .meta-info {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .meta-item {
+            margin-bottom: 5px;
+        }
+        .prompt-content {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            white-space: pre-line;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .btn-copy {
+            background-color: #2ecc71;
+        }
+        .btn-copy:hover {
+            background-color: #27ae60;
+        }
+        .actions {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>提示詞詳情</h1>
+        
+        <div id="prompt-details">
+            <div class="meta-info" id="meta-info">
+                <!-- 元資料將通過JavaScript動態添加 -->
+            </div>
+            
+            <div class="section">
+                <div class="section-title">生成的提示詞</div>
+                <div class="prompt-content" id="prompt-content">
+                    <!-- 提示詞內容將通過JavaScript動態添加 -->
+                </div>
+            </div>
+            
+            <div class="actions">
+                <a href="history.html" class="btn">返回列表</a>
+                <button id="copy-button" class="btn btn-copy">複製提示詞</button>
+                <a id="edit-link" href="#" class="btn">編輯提示詞</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 從URL獲取提示詞ID
+            const urlParams = new URLSearchParams(window.location.search);
+            const promptId = urlParams.get('id');
+            
+            if (!promptId) {
+                alert('未指定提示詞ID');
+                window.location.href = 'history.html';
+                return;
+            }
+            
+            // 獲取提示詞詳情
+            fetch(`/prompts/${promptId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.data) {
+                        const prompt = data.data;
+                        
+                        // 設置編輯連結
+                        document.getElementById('edit-link').href = `index.html?id=${promptId}`;
+                        
+                        // 填充元資料
+                        const metaInfo = document.getElementById('meta-info');
+                        
+                        // 根據資料創建元資料顯示
+                        let metaHTML = '';
+                        
+                        // 程式語言
+                        const programmingLanguage = prompt.programming_language === 'other' ? prompt.other_language : getSelectText('programming-language', prompt.programming_language);
+                        if (programmingLanguage) {
+                            metaHTML += `<div class="meta-item"><strong>程式語言：</strong>${programmingLanguage}</div>`;
+                        }
+                        
+                        // 專案類型
+                        const projectType = prompt.project_type === 'other' ? prompt.other_project_type : getSelectText('project-type', prompt.project_type);
+                        if (projectType) {
+                            metaHTML += `<div class="meta-item"><strong>專案類型：</strong>${projectType}</div>`;
+                        }
+                        
+                        // 架構
+                        const architecture = prompt.architecture === 'other' ? prompt.other_architecture : getSelectText('architecture', prompt.architecture);
+                        if (architecture) {
+                            metaHTML += `<div class="meta-item"><strong>程式架構：</strong>${architecture}</div>`;
+                        }
+                        
+                        // 創建時間
+                        if (prompt.timestamp) {
+                            const date = new Date(prompt.timestamp);
+                            const formattedDate = `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                            metaHTML += `<div class="meta-item"><strong>創建時間：</strong>${formattedDate}</div>`;
+                        }
+                        
+                        metaInfo.innerHTML = metaHTML;
+                        
+                        // 填充提示詞內容
+                        document.getElementById('prompt-content').textContent = prompt.generated_prompt;
+                        
+                        // 設置複製按鈕
+                        document.getElementById('copy-button').addEventListener('click', function() {
+                            navigator.clipboard.writeText(prompt.generated_prompt)
+                                .then(() => {
+                                    this.textContent = '已複製！';
+                                    setTimeout(() => {
+                                        this.textContent = '複製提示詞';
+                                    }, 2000);
+                                })
+                                .catch(err => {
+                                    console.error('無法複製文字: ', err);
+                                    alert('複製失敗，請手動選擇文字並複製。');
+                                });
+                        });
+                    } else {
+                        alert('找不到提示詞');
+                        alert('找不到提示詞');
+                        window.location.href = 'history.html';
+                    }
+                })
+                .catch(error => {
+                    console.error('獲取提示詞詳情時出錯：', error);
+                    alert('獲取提示詞詳情時出錯：' + error.message);
+                });
+            
+            // 輔助函數：從選擇器獲取文字
+            function getSelectText(selectId, value) {
+                // 這是一個模擬函數，實際情況下應該在伺服器端處理
+                // 這裡只是提供一個示例映射
+                const mappings = {
+                    'programming-language': {
+                        'python': 'Python',
+                        'javascript': 'JavaScript',
+                        'typescript': 'TypeScript',
+                        'java': 'Java',
+                        'csharp': 'C#',
+                        'cpp': 'C++',
+                        'php': 'PHP',
+                        'ruby': 'Ruby',
+                        'swift': 'Swift',
+                        'kotlin': 'Kotlin',
+                        'go': 'Go',
+                        'rust': 'Rust'
+                    },
+                    'project-type': {
+                        'web-frontend': '網頁前端',
+                        'web-backend': '網頁後端',
+                        'fullstack': '全棧應用',
+                        'mobile-app': '移動應用',
+                        'desktop-app': '桌面應用',
+                        'api': 'API服務',
+                        'data-analysis': '數據分析',
+                        'machine-learning': '機器學習',
+                        'game': '遊戲開發',
+                        'iot': '物聯網'
+                    },
+                    'architecture': {
+                        'mvc': 'MVC',
+                        'mvvm': 'MVVM',
+                        'microservices': '微服務',
+                        'serverless': '無伺服器',
+                        'monolithic': '單一架構',
+                        'layered': '分層架構',
+                        'event-driven': '事件驅動',
+                        'dont-know': '不確定/不適用'
+                    }
+                };
+                
+                return mappings[selectId] && mappings[selectId][value] ? mappings[selectId][value] : value;
+            }
+        });
+    </script>
+</body>
+</html>
